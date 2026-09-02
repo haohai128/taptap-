@@ -1,0 +1,17 @@
+server:
+  host: "127.0.0.1"
+  port: 8000
+
+collector:
+  min_request_interval_seconds: 2
+  max_retries: 3
+  per_run_limit_default: 50
+  schedule_interval_seconds_default: 3600
+
+analyzer:
+  batch_size: 20
+  poll_interval_seconds: 30
+  max_attempts: 3
+
+database:
+  url: "sqlite:///./data/app.db"
