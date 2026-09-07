@@ -32,3 +32,6 @@ app/dashboard/static/dist/
 # Config
 config.yaml
 .env
+
+serve_task.ps1
+serve.out.log
