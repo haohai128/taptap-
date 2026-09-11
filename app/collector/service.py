@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlmodel import Session, select
@@ -82,11 +82,28 @@ def register_community(
 
 
 def upsert_post(session: Session, community_id: int, fetched: FetchedPost, platform: str = "taptap") -> tuple[Post, bool]:
-    """去重入库。返回 (post, created)。已存在则跳过（不更新可变字段）。"""
+    """去重入库。返回 (post, created)。
+
+    已存在且发布时间在近 3 天内：更新点赞/回复数等热度字段；
+    超过 3 天的旧帖不再更新（热度已稳定，节省写放大）。
+    """
     existing = session.exec(
         select(Post).where(Post.taptap_post_id == fetched.taptap_post_id)
     ).first()
     if existing:
+        cutoff = now_cn() - timedelta(days=3)
+        pub = existing.published_at
+        if pub is not None:
+            if pub.tzinfo is None:
+                pub = pub.replace(tzinfo=timezone.utc)
+            if cutoff.tzinfo is None:
+                cutoff = cutoff.replace(tzinfo=timezone.utc)
+            if pub >= cutoff:
+                existing.reply_count = fetched.reply_count
+                existing.like_count = fetched.like_count
+                session.add(existing)
+                session.commit()
+                session.refresh(existing)
         return existing, False
 
     post = Post(
