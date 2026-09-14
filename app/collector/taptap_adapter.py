@@ -132,14 +132,21 @@ class TapTapWebApiAdapter(CommunityAdapter):
         content = (topic.get("summary") or "").strip()
         published_at = self._ts_to_dt(m.get("publish_time") or m.get("created_time"))
 
+        stat = m.get("stat") or {}
+        # by-group 列表的 stat 不含 comments，需用 for-app-detail 的补充逻辑
+        reply = stat.get("comments")
+        if reply is None:
+            reply = stat.get("feedback_status", 0)
+        like = stat.get("ups", stat.get("supports", 0))
+
         return FetchedPost(
             taptap_post_id=post_ref["taptap_post_id"],
             title=title,
             content=content,
             author=author_info.get("name", "") or "",
             published_at=published_at,
-            reply_count=int(stat.get("feedback_status", 0) or 0),
-            like_count=int(stat.get("ups", 0) or 0),
+            reply_count=int(reply or 0),
+            like_count=int(like or 0),
             raw_url=post_ref["raw_url"],
             topic_id=str(topic.get("id_str") or topic.get("id") or ""),
             is_elite=bool(m.get("is_elite") or False),

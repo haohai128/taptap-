@@ -44,8 +44,7 @@
             <th>作者</th>
             <th>发布时间</th>
             <th>情绪</th>
-            <th class="num">点赞</th>
-            <th class="num">回复</th>
+            <th class="num">热度</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -66,14 +65,13 @@
               <span class="tag" :class="sentClass(p.sentiment)" style="font-size:12px;padding:3px 10px">{{ sentLabel(p.sentiment) }}</span>
               <div v-if="p.sentiment_reason" class="sent-reason">{{ p.sentiment_reason }}</div>
             </td>
-            <td class="num">{{ p.like_count }}</td>
-            <td class="num">{{ p.reply_count }}</td>
+            <td class="num"><span title="点赞">👍 {{ p.like_count }}</span> <span title="回复" style="margin-left:8px">💬 {{ p.reply_count }}</span></td>
             <td>
               <button class="btn aux sm" @click="openDetail(p)">详情</button>
               <a v-if="p.raw_url" :href="p.raw_url" target="_blank" class="btn aux sm" style="margin-left:4px">原帖</a>
             </td>
           </tr>
-          <tr v-if="!sortedItems.length"><td colspan="9" class="empty">
+          <tr v-if="!sortedItems.length"><td colspan="8" class="empty">
             <span class="empty-icon">▤</span>暂无内容
           </td></tr>
         </tbody>
