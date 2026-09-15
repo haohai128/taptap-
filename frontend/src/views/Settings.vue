@@ -42,9 +42,10 @@
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getPlatformStatus } from '../api.js'
+import { getPlatformStatus, getSettings } from '../api.js'
 const platformStatus = ref([])
-const aiModel = ref('glm-5.2-local')
+const aiModel = ref('')
+const settings = ref({})
 const PLATFORM_LABELS = { taptap:'TapTap' }
 function platformLabel(p){ return PLATFORM_LABELS[p] || p }
 function statusLabel(s){ return { normal:'正常', collecting:'采集中', rate_limited:'限流', blocked:'风控阻断', auth_expired:'登录失效', network_error:'网络错误', stopped:'已停止' }[s] || s }
@@ -52,5 +53,6 @@ function statusClass(s){ return { normal:'pos', collecting:'info', rate_limited:
 function statusDot(s){ return { normal:'green', collecting:'blue', rate_limited:'amber', blocked:'red', auth_expired:'amber', network_error:'red', stopped:'gray' }[s] || 'gray' }
 function fmt(s){ return s ? s.replace('T',' ').slice(0,19) : '—' }
 async function loadStatus(){ try { platformStatus.value = await getPlatformStatus() } catch(e) {} }
-onMounted(loadStatus)
+async function loadSettings(){ try { settings.value = await getSettings(); aiModel.value = settings.value.ai_model || '' } catch(e) {} }
+onMounted(() => { loadStatus(); loadSettings() })
 </script>

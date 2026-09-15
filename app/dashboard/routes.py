@@ -105,6 +105,21 @@ def health():
     return {"status": "ok"}
 
 
+@router.get("/settings")
+def get_settings():
+    from app.dashboard.server import _state
+    config = _state.get("config")
+    ai = config.ai if config and config.ai else None
+    return {
+        "ai_model": ai.model if ai else None,
+        "ai_base_url": ai.base_url if ai else None,
+        "database": "sqlite",
+        "server": f"{config.server.host}:{config.server.port}" if config else None,
+        "collector_interval_default": config.collector.schedule_interval_seconds_default if config else None,
+        "analyzer_poll_interval": config.analyzer.poll_interval_seconds if config else None,
+    }
+
+
 @router.get("/platforms")
 def platforms():
     return {"items": supported_platforms()}
