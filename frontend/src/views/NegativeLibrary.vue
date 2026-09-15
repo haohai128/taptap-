@@ -27,12 +27,6 @@
             <option value="medium">中</option>
             <option value="low">低</option>
           </select>
-          <select class="select" v-model="statusFilter">
-            <option value="">全部状态</option>
-            <option value="open">未处理</option>
-            <option value="processing">处理中</option>
-            <option value="closed">已关闭</option>
-          </select>
           <button class="btn aux sm" @click="exportData">导出</button>
         </div>
       </div>
@@ -49,7 +43,6 @@
             <th>作者</th>
             <th>发布时间</th>
             <th>热度</th>
-            <th>状态</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -64,13 +57,12 @@
             <td class="muted">{{ p.author || '—' }}</td>
             <td class="muted">{{ fmt(p.published_at) }}</td>
             <td class="num">{{ (p.like_count||0) + (p.reply_count||0) }}</td>
-            <td><span class="tag" :class="statusClass(statusOf(p))">{{ statusLabel(statusOf(p)) }}</span></td>
             <td>
               <button class="btn aux sm" @click="openDetail(p)">详情</button>
               <a v-if="p.raw_url" :href="p.raw_url" target="_blank" class="btn aux sm" style="margin-left:4px">原帖</a>
             </td>
           </tr>
-          <tr v-if="!filtered.length"><td colspan="8" class="empty">
+          <tr v-if="!filtered.length"><td colspan="7" class="empty">
             <span class="empty-icon">⚠</span>暂无负面内容
           </td></tr>
         </tbody>
@@ -92,10 +84,9 @@
           <div style="padding:10px 12px;background:#FEF2F2;border-radius:6px;font-size:13px;line-height:1.7;margin-bottom:14px;border:1px solid #FECACA">
             {{ detail.content || '(无正文)' }}
           </div>
-          <div class="grid grid-3" style="margin-bottom:14px">
+          <div class="grid grid-2" style="margin-bottom:14px">
             <div><div class="muted" style="font-size:11px">风险等级</div><span class="tag" :class="riskClass(detail)">{{ riskLabel(detail) }}</span></div>
             <div><div class="muted" style="font-size:11px">热度</div><b>{{ (detail.like_count||0)+(detail.reply_count||0) }}</b></div>
-            <div><div class="muted" style="font-size:11px">状态</div><span class="tag aux">未处理</span></div>
           </div>
           <a v-if="detail.raw_url" :href="detail.raw_url" target="_blank" class="btn sm">查看原帖 →</a>
         </div>
@@ -110,7 +101,6 @@ import { getNegativeLibrary, listKeywords, addKeyword, deleteKeyword, toggleKeyw
 const items = ref([])
 const search = ref('')
 const riskFilter = ref('')
-const statusFilter = ref('')
 const detail = ref(null)
 const keywords = ref([])
 const newWord = ref('')
@@ -139,9 +129,6 @@ function riskLabel(p){
   return '低'
 }
 function riskValue(p){ return heatOf(p) >= 50 ? 'high' : heatOf(p) >= 10 ? 'medium' : 'low' }
-function statusOf(p){ return 'open' }
-function statusClass(s){ return { open:'neg', processing:'warn', closed:'aux' }[s] || 'aux' }
-function statusLabel(s){ return { open:'未处理', processing:'处理中', closed:'已关闭' }[s] || s }
 
 const filtered = computed(() => {
   let arr = items.value
@@ -150,7 +137,6 @@ const filtered = computed(() => {
     arr = arr.filter(p => (p.title||'').toLowerCase().includes(q) || (p.author||'').toLowerCase().includes(q))
   }
   if (riskFilter.value) arr = arr.filter(p => riskValue(p) === riskFilter.value)
-  if (statusFilter.value) arr = arr.filter(p => statusOf(p) === statusFilter.value)
   return arr
 })
 
