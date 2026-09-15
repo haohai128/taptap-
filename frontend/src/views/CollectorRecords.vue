@@ -46,10 +46,9 @@ function runLabel(s){ return { success:'成功', blocked:'风控阻断', partial
 async function load(){
   communities.value = await listCommunities()
   if (f.value.community_id) {
-    runs.value = await listRuns(f.value.community_id)
+    runs.value = (await listRuns(f.value.community_id)).map(r => ({ ...r, community_id: f.value.community_id }))
     if (f.value.status) runs.value = runs.value.filter(r => r.status === f.value.status)
   } else {
-    // 聚合所有社区
     const all = []
     for (const c of communities.value) {
       try { const rs = await listRuns(c.id); rs.forEach(r => all.push({ ...r, community_id: c.id })) } catch(e) {}
