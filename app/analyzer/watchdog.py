@@ -233,6 +233,7 @@ def content_library(
             "raw_url": p.raw_url,
             "like_count": p.like_count,
             "reply_count": p.reply_count,
+            "is_deleted": p.is_deleted,
         })
     return items
 

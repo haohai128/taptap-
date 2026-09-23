@@ -250,6 +250,36 @@ def run_collection(
             community.group_id = str(discovered_gid)
             session.add(community)
 
+    # 删除检测：本次抓到的帖子 id 集合
+    fetched_ids = {it.get("taptap_post_id") for it in list_items if it.get("taptap_post_id")}
+    # 近 3 天内已入库、但本次列表中已不存在的帖子 → 标记被删除
+    if fetched_ids:
+        cutoff = now_cn() - timedelta(days=3)
+        recent_posts = session.exec(
+            select(Post).where(
+                Post.community_id == community.id,
+                Post.is_deleted == False,  # noqa: E712
+            )
+        ).all()
+        for p in recent_posts:
+            if p.published_at is None:
+                continue
+            pub = p.published_at
+            if pub.tzinfo is None:
+                pub = pub.replace(tzinfo=timezone.utc)
+            if cutoff.tzinfo is None:
+                cutoff = cutoff.replace(tzinfo=timezone.utc)
+            if pub >= cutoff and p.taptap_post_id not in fetched_ids:
+                p.is_deleted = True
+                session.add(p)
+        # 帖子重新出现（作者撤销删除）→ 恢复正常
+        for p in session.exec(
+            select(Post).where(Post.community_id == community.id, Post.is_deleted == True)  # noqa: E712
+        ).all():
+            if p.taptap_post_id in fetched_ids:
+                p.is_deleted = False
+                session.add(p)
+
     if run.status == CollectionRunStatus.RUNNING:
         if failed_count > 0:
             final_status = CollectionRunStatus.PARTIAL

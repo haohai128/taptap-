@@ -100,10 +100,11 @@ class Post(SQLModel, table=True):
     raw_url: str = ""
     status: PostStatus = Field(default=PostStatus.PENDING, index=True)
     fetched_at: datetime = Field(default_factory=_utcnow)
-    topic_id: str = Field(default="")
+    topic_id: str = ""
     is_elite: bool = False
     is_official: bool = False
     group_id: str = ""
+    is_deleted: bool = Field(default=False, index=True)
 
 
 class AnalysisResult(SQLModel, table=True):

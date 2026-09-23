@@ -18,6 +18,11 @@
             <option value="negative">负面</option>
             <option value="neutral">中性</option>
           </select>
+          <select class="select" v-model="f.deleted" @change="load">
+            <option value="">全部状态</option>
+            <option value="normal">正常</option>
+            <option value="deleted">被删除</option>
+          </select>
           <select class="select" v-model="sortBy">
             <option value="published_at_desc">发布时间 ↓</option>
             <option value="published_at_asc">发布时间 ↑</option>
@@ -45,6 +50,7 @@
             <th>发布时间</th>
             <th>情绪</th>
             <th class="num">热度</th>
+            <th>状态</th>
             <th>操作</th>
           </tr>
         </thead>
@@ -66,12 +72,13 @@
               <div v-if="p.sentiment_reason" class="sent-reason">{{ p.sentiment_reason }}</div>
             </td>
             <td class="num"><span title="点赞">👍 {{ p.like_count }}</span> <span title="回复" style="margin-left:8px">💬 {{ p.reply_count }}</span></td>
+            <td><span class="tag" :class="p.is_deleted ? 'neg' : 'pos'">{{ p.is_deleted ? '被删除' : '正常' }}</span></td>
             <td>
               <button class="btn aux sm" @click="openDetail(p)">详情</button>
               <a v-if="p.raw_url" :href="p.raw_url" target="_blank" class="btn aux sm" style="margin-left:4px">原帖</a>
             </td>
           </tr>
-          <tr v-if="!sortedItems.length"><td colspan="8" class="empty">
+          <tr v-if="!sortedItems.length"><td colspan="9" class="empty">
             <span class="empty-icon">▤</span>暂无内容
           </td></tr>
         </tbody>
@@ -158,7 +165,7 @@ const items = ref([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
-const f = ref({ keyword:'', community_id:'', platform:'', sentiment:'' })
+const f = ref({ keyword:'', community_id:'', platform:'', sentiment:'', deleted:'' })
 const sortBy = ref('published_at_desc')
 const platformOpts = ref([])
 const communityOpts = ref([])
@@ -185,11 +192,14 @@ function openDetail(p){ detail.value = p }
 async function load(){
   const params = { ...f.value }
   // API 不支持分页，前端模拟（数据量不大）
-  items.value = await getContentLibrary(params)
-  total.value = items.value.length
+  let arr = await getContentLibrary(params)
+  if (f.value.deleted === 'normal') arr = arr.filter(p => !p.is_deleted)
+  else if (f.value.deleted === 'deleted') arr = arr.filter(p => p.is_deleted)
+  items.value = arr
+  total.value = arr.length
   page.value = 1
 }
-function reset(){ f.value = { keyword:'', community_id:'', platform:'', sentiment:'' }; sortBy.value = 'published_at_desc'; load() }
+function reset(){ f.value = { keyword:'', community_id:'', platform:'', sentiment:'', deleted:'' }; sortBy.value = 'published_at_desc'; load() }
 
 function exportData(){
   const rows = [['标题','社区','平台','作者','发布时间','情绪','话题','点赞','回复','链接']]
