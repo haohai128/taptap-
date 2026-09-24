@@ -2,16 +2,40 @@
   <div id="app">
     <aside class="sidebar">
       <div class="logo">
-        <span class="logo-mark"></span>
-        <span class="logo-text">舆情监测</span>
+        <svg class="logo-mark" viewBox="0 0 32 32" width="22" height="22">
+          <rect x="2" y="2" width="28" height="28" rx="7" fill="#0F766E"/>
+          <path d="M16 7c-4.4 0-8 3.1-8 7 0 1.9.9 3.7 2.3 5L9 24.5c-.2.6.5 1.1 1 .7l3.7-2.4c.7.1 1.5.2 2.3.2 4.4 0 8-3.1 8-7s-3.6-7-8-7z" fill="#fff"/>
+          <circle cx="12.5" cy="14" r="1.4" fill="#0F766E"/>
+          <circle cx="16" cy="14" r="1.4" fill="#0F766E"/>
+          <circle cx="19.5" cy="14" r="1.4" fill="#0F766E"/>
+        </svg>
+        <span class="logo-text">社区舆情监控</span>
       </div>
       <nav class="nav">
-        <router-link to="/" class="nav-item" exact><span class="nav-ico">▦</span>看板</router-link>
-        <router-link to="/communities" class="nav-item"><span class="nav-ico">◫</span>社区管理</router-link>
-        <router-link to="/content-library" class="nav-item"><span class="nav-ico">≣</span>内容库</router-link>
-        <router-link to="/negative-library" class="nav-item"><span class="nav-ico">⚠</span>负面库</router-link>
-        <router-link to="/collector-records" class="nav-item"><span class="nav-ico">↻</span>采集记录</router-link>
-        <router-link to="/settings" class="nav-item"><span class="nav-ico">⚙</span>系统设置</router-link>
+        <router-link to="/" class="nav-item" exact>
+          <svg class="nav-ico" viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M3 3h6v7H3V3zm8 0h6v4h-6V3zM3 12h6v5H3v-5zm8-3h6v8h-6V9z"/></svg>
+          看板
+        </router-link>
+        <router-link to="/communities" class="nav-item">
+          <svg class="nav-ico" viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M10 2a4 4 0 014 4v1h1a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h1V6a4 4 0 014-4zm0 2a2 2 0 00-2 2v1h4V6a2 2 0 00-2-2z"/></svg>
+          社区管理
+        </router-link>
+        <router-link to="/content-library" class="nav-item">
+          <svg class="nav-ico" viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M4 3h12a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V4a1 1 0 011-1zm2 3v2h8V6H6zm0 4v2h8v-2H6zm0 4v2h5v-2H6z"/></svg>
+          内容库
+        </router-link>
+        <router-link to="/negative-library" class="nav-item">
+          <svg class="nav-ico" viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M10 2l8 14H2L10 2zm-1 5v4h2V7H9zm0 5.5v2h2v-2H9z"/></svg>
+          负面库
+        </router-link>
+        <router-link to="/collector-records" class="nav-item">
+          <svg class="nav-ico" viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M10 3a7 7 0 016.32 4H14a1 1 0 100 2h5V4a1 1 0 10-2 0v1.2A9 9 0 001 10h2a7 7 0 017-7zm7 5a7 7 0 01-13.32 5H6a1 1 0 100-2H1v5a1 1 0 102 0v-1.2A9 9 0 0019 10h-2a7 7 0 001-2z"/></svg>
+          采集记录
+        </router-link>
+        <router-link to="/settings" class="nav-item">
+          <svg class="nav-ico" viewBox="0 0 20 20" width="15" height="15"><path fill="currentColor" d="M10 6a4 4 0 100 8 4 4 0 000-8zm8.4 5.9l-1.8 1.4.1 2.3-2.1.7-1.1 2-2.2-.5-2 1.2-1.7-1.5-2.3.1-.7-2.1-2-1.1.5-2.2-1.2-2 1.5-1.7-.1-2.3 2.1-.7 1.1-2 2.2.5 2-1.2L10 1l1.5 1.7 2.3-.1.7 2.1 2 1.1-.5 2.2 1.2 2-1.4 1.8z"/></svg>
+          系统设置
+        </router-link>
       </nav>
     </aside>
     <div class="wrapper">
@@ -77,11 +101,11 @@ body {
   position: sticky; top: 0; height: 100vh; overflow-y: auto; z-index: 10;
 }
 .logo { display: flex; align-items: center; gap: 9px; padding: 16px 18px; border-bottom: 1px solid var(--border-light); }
-.logo-mark { width: 18px; height: 18px; background: var(--primary); border-radius: 4px; }
-.logo-text { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: 0.3px; }
+.logo-mark { flex-shrink: 0; }
+.logo-text { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: 0.3px; white-space: nowrap; }
 .nav { display: flex; flex-direction: column; padding: 8px 8px; }
 .nav-item { display: flex; align-items: center; gap: 9px; color: var(--text-muted); text-decoration: none; padding: 9px 12px; border-radius: 6px; font-size: 13px; margin: 1px 0; transition: all .12s; }
-.nav-ico { width: 16px; text-align: center; font-size: 13px; opacity: .7; }
+.nav-ico { width: 16px; height: 16px; flex-shrink: 0; opacity: .7; }
 .nav-item:hover { background: var(--border-light); color: var(--text); }
 .nav-item.router-link-active { background: var(--primary-light); color: var(--primary); font-weight: 500; }
 .nav-item.router-link-active .nav-ico { opacity: 1; }
@@ -96,7 +120,7 @@ body {
 .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .topbar-time { font-size: 12px; color: var(--text-light); font-variant-numeric: tabular-nums; }
-.content { flex: 1; padding: 16px 24px; overflow: auto; width: 100%; max-width: 1400px; margin: 0 auto; }
+.content { flex: 1; padding: 16px 24px; overflow: auto; width: 100%; max-width: 1280px; margin: 0 auto; }
 
 /* ===== Generic components ===== */
 .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; }
@@ -141,14 +165,14 @@ body {
 
 /* Table */
 .table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.table th { text-align: left; padding: 9px 12px; color: var(--text-muted); font-weight: 600; background: #FAFBFC; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: .2px; }
-.table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: middle; }
+.table th { text-align: left; padding: 9px 12px; color: var(--text-muted); font-weight: 600; background: #FAFBFC; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: .2px; white-space: nowrap; }
+.table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: middle; white-space: nowrap; }
 .table tbody tr:hover { background: #FAFBFC; }
 .table .num { font-variant-numeric: tabular-nums; text-align: right; }
 .table .muted { color: var(--text-muted); }
 
 /* Tags / badges */
-.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; line-height: 1.5; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; line-height: 1.5; white-space: nowrap; }
 .tag.pos { background: #F0FDF4; color: #15803D; border: 1px solid #BBF7D0; }
 .tag.neg { background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA; }
 .tag.neu { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }

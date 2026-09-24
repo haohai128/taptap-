@@ -292,3 +292,107 @@ def platform_overview(
             "sentiments": dict(sent_counter),
         })
     return out
+
+
+def dashboard_summary(session: Session, days: int = 7) -> dict:
+    """看板汇总：KPI、情绪占比、近 N 天趋势、热点话题、最新预警。"""
+    from app.core.models import Alert, Community
+    from app.core.tz import now_cn
+
+    now = now_cn()
+    since = now - __import__("datetime").timedelta(days=days)
+
+    posts = list(session.exec(select(Post).order_by(Post.id.desc())).all())
+    results = _load_results_for_posts(session, [p.id for p in posts])
+
+    sent_counter: Counter[str] = Counter()
+    deleted_count = 0
+    pending_count = 0
+    total_likes = 0
+    total_replies = 0
+    for p in posts:
+        if p.is_deleted:
+            deleted_count += 1
+            continue
+        if p.status and p.status.value == "pending":
+            pending_count += 1
+        total_likes += p.like_count or 0
+        total_replies += p.reply_count or 0
+        r = results.get(p.id)
+        if r:
+            sent_counter[r.sentiment] += 1
+
+    total = len(posts)
+    analyzed = sum(sent_counter.values())
+
+    # 近 N 天趋势（按日聚合情绪）
+    buckets: dict[str, Counter[str]] = defaultdict(Counter)
+    for p in posts:
+        r = results.get(p.id)
+        if r is None or p.published_at is None:
+            continue
+        pub = p.published_at
+        if getattr(pub, "tzinfo", None) is not None:
+            pub = pub.replace(tzinfo=None)
+        try:
+            if pub >= since.replace(tzinfo=None):
+                buckets[pub.strftime("%Y-%m-%d")][r.sentiment] += 1
+        except TypeError:
+            pass
+    trend_days = sorted(buckets.keys())
+    trend = {
+        "days": trend_days,
+        "series": {
+            s: [{"date": d, "count": buckets[d].get(s, 0)} for d in trend_days]
+            for s in ("positive", "negative", "neutral")
+        },
+    }
+
+    # 热点话题（全部帖子的 topics 频次 top10）
+    topic_counter: Counter[str] = Counter()
+    for r in results.values():
+        try:
+            import json as _json
+            for t in _json.loads(r.topics_json or "[]"):
+                if t:
+                    topic_counter[t] += 1
+        except Exception:
+            pass
+    hot_topics = [{"name": t, "count": c} for t, c in topic_counter.most_common(10)]
+
+    # 最新预警（最多 5 条未处理）
+    alerts = list(
+        session.exec(
+            select(Alert).where(Alert.status == "open").order_by(Alert.created_at.desc()).limit(5)
+        ).all()
+    )
+    alert_items = [
+        {
+            "id": a.id,
+            "title": a.title,
+            "detail": (a.detail or "")[:120],
+            "level": a.level,
+            "keyword": a.keyword,
+            "created_at": a.created_at,
+        }
+        for a in alerts
+    ]
+
+    return {
+        "kpi": {
+            "total": total,
+            "analyzed": analyzed,
+            "pending": pending_count,
+            "deleted": deleted_count,
+            "positive": sent_counter.get("positive", 0),
+            "negative": sent_counter.get("negative", 0),
+            "neutral": sent_counter.get("neutral", 0),
+            "unknown": sent_counter.get("unknown", 0),
+            "total_likes": total_likes,
+            "total_replies": total_replies,
+        },
+        "sentiment_proportion": dict(sent_counter),
+        "trend": trend,
+        "hot_topics": hot_topics,
+        "alerts": alert_items,
+    }

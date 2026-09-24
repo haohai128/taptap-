@@ -10,6 +10,9 @@ export { api }
 // 系统设置
 export const getSettings = () => api.get('/settings').then(r => r.data)
 
+// 看板汇总
+export const getDashboardSummary = () => api.get('/dashboard/summary').then(r => r.data)
+
 // 社区
 export const listCommunities = () => api.get('/communities').then(r => r.data.items)
 export const createCommunity = (p) => api.post('/communities', p).then(r => r.data)

@@ -13,6 +13,7 @@ from app.core.tz import iso_cn
 from app.analyzer.aggregation import (
     bugs_and_suggestions,
     content_reviews,
+    dashboard_summary,
     platform_overview,
     sentiment_proportion,
     sentiment_trend,
@@ -123,6 +124,11 @@ def get_settings():
 @router.get("/platforms")
 def platforms():
     return {"items": supported_platforms()}
+
+
+@router.get("/dashboard/summary")
+def get_dashboard_summary(session: Session = Depends(get_session)):
+    return dashboard_summary(session)
 
 
 # -------- 社区 --------
