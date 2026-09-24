@@ -120,7 +120,8 @@ body {
 .topbar-title { font-size: 15px; font-weight: 600; color: var(--text); }
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .topbar-time { font-size: 12px; color: var(--text-light); font-variant-numeric: tabular-nums; }
-.content { flex: 1; padding: 16px 24px; overflow: auto; width: 100%; max-width: 1280px; margin: 0 auto; }
+.content { flex: 1; padding: 16px 24px; overflow: auto; width: 100%; margin: 0 auto; }
+.content > div { max-width: 1280px; margin: 0 auto; }
 
 /* ===== Generic components ===== */
 .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 14px; }
@@ -166,7 +167,8 @@ body {
 /* Table */
 .table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .table th { text-align: left; padding: 9px 12px; color: var(--text-muted); font-weight: 600; background: #FAFBFC; border-bottom: 1px solid var(--border); font-size: 11px; letter-spacing: .2px; white-space: nowrap; }
-.table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: middle; white-space: nowrap; }
+.table td { padding: 9px 12px; border-bottom: 1px solid var(--border-light); color: var(--text); vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+.table td.wrap-cell { white-space: normal; overflow: visible; }
 .table tbody tr:hover { background: #FAFBFC; }
 .table .num { font-variant-numeric: tabular-nums; text-align: right; }
 .table .muted { color: var(--text-muted); }

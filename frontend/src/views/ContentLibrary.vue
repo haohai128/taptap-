@@ -43,7 +43,7 @@
       <table class="table">
         <thead>
           <tr>
-            <th style="width:28%">标题</th>
+            <th>标题</th>
             <th>社区</th>
             <th>平台</th>
             <th>作者</th>
@@ -56,7 +56,7 @@
         </thead>
         <tbody>
           <tr v-for="p in sortedItems" :key="p.id">
-            <td>
+            <td class="wrap-cell">
               <div class="cell-title" @click="openDetail(p)">{{ p.title || '(无标题)' }}</div>
               <div class="cell-content muted">{{ truncate(p.content, 60) }}</div>
               <div v-if="p.topics && p.topics.length" style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap">
@@ -67,8 +67,8 @@
             <td>{{ platformLabel(p.platform) }}</td>
             <td class="muted">{{ p.author || '—' }}</td>
             <td class="muted">{{ fmt(p.published_at) }}</td>
-            <td style="min-width:160px">
-              <span class="tag" :class="sentClass(p.sentiment)" style="font-size:12px;padding:3px 10px">{{ sentLabel(p.sentiment) }}</span>
+            <td class="wrap-cell">
+              <span class="tag" :class="sentClass(p.sentiment)">{{ sentLabel(p.sentiment) }}</span>
               <div v-if="p.sentiment_reason" class="sent-reason">{{ p.sentiment_reason }}</div>
             </td>
             <td class="num"><span title="点赞">👍 {{ p.like_count }}</span> <span title="回复" style="margin-left:8px">💬 {{ p.reply_count }}</span></td>
@@ -219,9 +219,9 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
-.cell-title { font-weight: 500; cursor: pointer; color: var(--text); }
+.cell-title { font-weight: 500; cursor: pointer; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
 .cell-title:hover { color: var(--primary); }
-.cell-content { font-size: 11px; margin-top: 2px; }
-.sent-reason { font-size: 12px; margin-top: 4px; color: var(--text-muted); line-height: 1.4; }
+.cell-content { font-size: 11px; margin-top: 2px; white-space: normal; }
+.sent-reason { font-size: 12px; margin-top: 4px; color: var(--text-muted); line-height: 1.4; white-space: normal; }
 .num { font-variant-numeric: tabular-nums; text-align: right; }
 </style>
