@@ -190,7 +190,9 @@ const sortedItems = computed(() => {
 function openDetail(p){ detail.value = p }
 
 async function load(){
-  const params = { ...f.value }
+  // 过滤空字符串参数，避免 community_id='' 触发后端 422
+  const params = {}
+  Object.entries(f.value).forEach(([k, v]) => { if (v !== '' && v != null) params[k] = v })
   // API 不支持分页，前端模拟（数据量不大）
   let arr = await getContentLibrary(params)
   if (f.value.deleted === 'normal') arr = arr.filter(p => !p.is_deleted)
