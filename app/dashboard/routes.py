@@ -139,7 +139,28 @@ def list_communities(session: Session = Depends(get_session)):
     out = []
     for c in communities:
         out.append(_community_to_out(c, _last_run_for(session, c.id)))
+        out[-1].update(_community_sentiment_counts(session, c.id))
     return {"items": out}
+
+
+def _community_sentiment_counts(session: Session, community_id: int) -> dict:
+    """社区情绪统计（有效情绪 = 人工修正优先）。"""
+    from app.analyzer.aggregation import effective_sentiment
+    from collections import Counter
+
+    rows = session.exec(
+        select(AnalysisResult, Post).where(
+            AnalysisResult.post_id == Post.id,
+            Post.community_id == community_id,
+            Post.is_deleted == False,  # noqa: E712
+        )
+    ).all()
+    counter = Counter(effective_sentiment(r) for r, _ in rows)
+    return {
+        "positive_count": counter.get("positive", 0),
+        "negative_count": counter.get("negative", 0),
+        "neutral_count": counter.get("neutral", 0),
+    }
 
 
 @router.post("/communities")

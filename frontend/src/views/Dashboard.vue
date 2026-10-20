@@ -95,48 +95,37 @@
       </div>
     </div>
 
-    <!-- 第三层：最新预警 + 最近采集 + 最近负面 -->
-    <div class="grid grid-3">
+    <!-- 第三层：近 7 日负面趋势 top 社区 + 最近负面内容 -->
+    <div class="grid grid-2">
       <div class="card">
-        <div class="card-head"><h3 class="card-title">最新预警</h3></div>
-        <table class="table">
-          <thead><tr><th>标题</th><th>时间</th></tr></thead>
-          <tbody>
-            <tr v-for="a in alerts" :key="a.id">
-              <td class="ellipsis">{{ a.title }}</td>
-              <td class="muted">{{ fmt(a.created_at) }}</td>
-            </tr>
-            <tr v-if="!alerts.length"><td colspan="2" class="empty">暂无预警</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><h3 class="card-title">最近采集状态</h3><router-link to="/collector-records" class="muted" style="font-size:12px">全部 →</router-link></div>
-        <table class="table">
-          <thead><tr><th>社区</th><th>状态</th><th>新增</th><th>时间</th></tr></thead>
-          <tbody>
-            <tr v-for="r in recentRuns" :key="r.id">
-              <td>{{ r.community_name || ('#'+r.community_id) }}</td>
-              <td><span class="tag" :class="runClass(r.status)">{{ runLabel(r.status) }}</span></td>
-              <td class="num">{{ r.new_count }}</td>
-              <td class="muted">{{ fmt(r.ended_at) }}</td>
-            </tr>
-            <tr v-if="!recentRuns.length"><td colspan="4" class="empty">暂无采集记录</td></tr>
-          </tbody>
-        </table>
+        <div class="card-head"><h3 class="card-title">社区负面排行</h3><router-link to="/communities" class="muted" style="font-size:12px">社区管理 →</router-link></div>
+        <div class="card-body">
+          <div v-if="negRanking.length" class="rank-list">
+            <div v-for="(r,i) in negRanking" :key="r.id" class="rank-row">
+              <span class="rank-no" :class="{ hot: i<3 }">{{ i+1 }}</span>
+              <span class="rank-name">{{ r.name }}</span>
+              <div class="rank-bar-wrap">
+                <div class="rank-bar" :style="{width: r.pct + '%'}"></div>
+              </div>
+              <span class="rank-val danger">{{ r.negative }}</span>
+              <span class="rank-sub muted">/ {{ r.total }}</span>
+            </div>
+          </div>
+          <div v-else class="empty">暂无分析数据</div>
+        </div>
       </div>
 
       <div class="card">
         <div class="card-head"><h3 class="card-title">最近负面内容</h3><router-link to="/negative-library" class="muted" style="font-size:12px">全部 →</router-link></div>
         <table class="table">
-          <thead><tr><th>标题</th><th>时间</th></tr></thead>
+          <thead><tr><th>标题</th><th>社区</th><th>时间</th></tr></thead>
           <tbody>
             <tr v-for="(p,i) in recentNegative" :key="i">
               <td class="ellipsis">{{ p.title || '(无标题)' }}</td>
+              <td class="muted">{{ p.community_name || '—' }}</td>
               <td class="muted">{{ fmt(p.published_at) }}</td>
             </tr>
-            <tr v-if="!recentNegative.length"><td colspan="2" class="empty">暂无负面内容</td></tr>
+            <tr v-if="!recentNegative.length"><td colspan="3" class="empty">暂无负面内容</td></tr>
           </tbody>
         </table>
       </div>
@@ -155,7 +144,6 @@ const recentRuns = ref([])
 
 const kpi = computed(() => summary.value.kpi || {})
 const hotTopics = computed(() => summary.value.hot_topics || [])
-const alerts = computed(() => summary.value.alerts || [])
 const trendDays = computed(() => (summary.value.trend && summary.value.trend.days) || [])
 
 function sentCount(s){ return (summary.value.sentiment_proportion || {})[s] || 0 }
@@ -179,21 +167,28 @@ function trendTotal(day){
   return ['positive','negative','neutral'].reduce((a,k)=>a+trendCount(k,day),0)
 }
 
-const recentNegative = computed(() => negative.value.slice(0,6))
+const recentNegative = computed(() => negative.value.slice(0,8))
 
-function runClass(s){ return { success:'pos', blocked:'neg', partial:'warn', failed:'neg', stopped:'aux', running:'info' }[s] || 'neu' }
-function runLabel(s){ return { success:'成功', blocked:'风控阻断', partial:'部分成功', failed:'失败', stopped:'已停止', running:'采集中' }[s] || s }
 function fmt(s){ return s ? s.replace('T',' ').slice(0,16) : '—' }
 
 async function load() {
   try { summary.value = await getDashboardSummary() } catch(e) {}
   try { communities.value = await listCommunities() } catch(e) {}
-  const runs = []
-  communities.value.forEach(c => { if (c.last_run) runs.push({ ...c.last_run, community_id: c.id, community_name: c.name }) })
-  runs.sort((a,b) => (b.started_at||'').localeCompare(a.started_at||''))
-  recentRuns.value = runs.slice(0,6)
   try { negative.value = await getNegativeLibrary() } catch(e) {}
 }
+
+// 社区负面排行：负面数 / 已分析数，取前 6
+const negRanking = computed(() => {
+  const rows = communities.value.map(c => ({
+    id: c.id,
+    name: c.name,
+    negative: c.negative_count || 0,
+    total: (c.positive_count || 0) + (c.negative_count || 0) + (c.neutral_count || 0),
+  })).filter(r => r.total > 0)
+  const max = Math.max(...rows.map(r => r.negative), 1)
+  rows.forEach(r => { r.pct = Math.round(r.negative / max * 100) })
+  return rows.sort((a,b) => b.negative - a.negative).slice(0, 6)
+})
 onMounted(load)
 </script>
 
@@ -240,4 +235,16 @@ onMounted(load)
 .topic-rank.hot { background: #FEF2F2; color: var(--danger); font-weight: 600; }
 .topic-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .topic-count { flex-shrink: 0; font-size: 11px; }
+
+/* 社区负面排行 */
+.rank-list { display: flex; flex-direction: column; gap: 10px; }
+.rank-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.rank-no { width: 18px; height: 18px; border-radius: 4px; background: var(--border-light); color: var(--text-muted); font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rank-no.hot { background: #FEF2F2; color: var(--danger); font-weight: 600; }
+.rank-name { width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+.rank-bar-wrap { flex: 1; height: 8px; background: var(--border-light); border-radius: 4px; overflow: hidden; }
+.rank-bar { height: 100%; background: linear-gradient(90deg, #FCA5A5, #F87171); border-radius: 4px; }
+.rank-val { font-variant-numeric: tabular-nums; font-weight: 600; flex-shrink: 0; min-width: 28px; text-align: right; }
+.rank-val.danger { color: var(--danger); }
+.rank-sub { flex-shrink: 0; font-size: 11px; }
 </style>
