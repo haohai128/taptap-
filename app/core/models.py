@@ -113,6 +113,7 @@ class AnalysisResult(SQLModel, table=True):
     topics_json: str = "[]"
     sentiment: str = "unknown"
     sentiment_reason: str = ""
+    sentiment_manual: Optional[str] = Field(default=None)
     bugs_json: str = "[]"
     suggestions_json: str = "[]"
     content_reviews_json: str = "[]"

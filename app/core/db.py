@@ -61,6 +61,20 @@ def create_all():
 
     engine = get_engine()
     SQLModel.metadata.create_all(engine)
+    _ensure_sqlite_columns(engine)
+
+
+def _ensure_sqlite_columns(engine) -> None:
+    """SQLite 轻量迁移：为已存在的表补充新增列（create_all 不会 ALTER 旧表）。"""
+    from sqlalchemy import inspect, text
+
+    insp = inspect(engine)
+    if not insp.has_table("analysisresult"):
+        return
+    existing = {c["name"] for c in insp.get_columns("analysisresult")}
+    if "sentiment_manual" not in existing:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE analysisresult ADD COLUMN sentiment_manual VARCHAR"))
 
 
 def get_session() -> Session:

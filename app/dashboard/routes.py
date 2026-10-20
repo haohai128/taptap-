@@ -498,6 +498,26 @@ def get_content_library(
     return {"items": content_library(session, community_id=community_id, platform=platform, keyword=keyword, sentiment=sentiment, since=since, until=until, limit=limit)}
 
 
+class SentimentOverride(BaseModel):
+    sentiment: str  # positive / negative / neutral / "" (空串=恢复AI结果)
+
+
+@router.patch("/posts/{post_id}/sentiment")
+def override_post_sentiment(post_id: int, payload: SentimentOverride, session: Session = Depends(get_session)):
+    """人工修正帖子情绪。空 sentiment 表示恢复为 AI 判定结果。"""
+    valid = {"positive", "negative", "neutral", ""}
+    if payload.sentiment not in valid:
+        raise HTTPException(status_code=422, detail="sentiment must be positive/negative/neutral or empty")
+    r = session.exec(select(AnalysisResult).where(AnalysisResult.post_id == post_id)).first()
+    if r is None:
+        raise HTTPException(status_code=404, detail="analysis result not found")
+    r.sentiment_manual = payload.sentiment or None
+    session.add(r)
+    session.commit()
+    session.refresh(r)
+    return {"post_id": post_id, "sentiment": r.sentiment_manual or r.sentiment, "sentiment_manual": r.sentiment_manual, "sentiment_ai": r.sentiment}
+
+
 @router.get("/negative-library")
 def get_negative_library(
     community_id: Optional[int] = Query(None),

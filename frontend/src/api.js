@@ -47,6 +47,7 @@ export const toggleKeyword = (id, enabled) => api.patch(`/keywords/${id}`, null,
 // 内容库 / 负面库
 export const getContentLibrary = (params = {}) => api.get('/content-library', { params }).then(r => r.data.items)
 export const getNegativeLibrary = (params = {}) => api.get('/negative-library', { params }).then(r => r.data.items)
+export const overrideSentiment = (postId, sentiment) => api.patch(`/posts/${postId}/sentiment`, { sentiment }).then(r => r.data)
 
 // 预警
 export const listAlerts = (params = {}) => api.get('/alerts', { params }).then(r => r.data.items)

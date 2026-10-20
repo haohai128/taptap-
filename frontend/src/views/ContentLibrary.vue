@@ -69,6 +69,7 @@
             <td class="muted">{{ fmt(p.published_at) }}</td>
             <td class="wrap-cell">
               <span class="tag" :class="sentClass(p.sentiment)">{{ sentLabel(p.sentiment) }}</span>
+              <span v-if="p.sentiment_manual" class="tag warn" style="margin-left:4px;font-size:10px;padding:1px 5px" title="人工修正">人工</span>
               <div v-if="p.sentiment_reason" class="sent-reason">{{ p.sentiment_reason }}</div>
             </td>
             <td class="num"><span title="点赞">👍 {{ p.like_count }}</span> <span title="回复" style="margin-left:8px">💬 {{ p.reply_count }}</span></td>
@@ -112,14 +113,26 @@
 
           <!-- AI 分析结果 -->
           <div class="grid grid-4" style="margin-bottom:14px">
-            <div><div class="muted" style="font-size:11px">AI 情绪</div><span class="tag" :class="sentClass(detail.sentiment)">{{ sentLabel(detail.sentiment) }}</span></div>
+            <div>
+              <div class="muted" style="font-size:11px">AI 情绪</div>
+              <span v-if="detail.sentiment_ai" class="tag" :class="sentClass(detail.sentiment_ai)">{{ sentLabel(detail.sentiment_ai) }}</span>
+              <span v-else class="tag neu">未分析</span>
+            </div>
+            <div>
+              <div class="muted" style="font-size:11px">人工修正</div>
+              <select class="select" style="padding:2px 6px;font-size:12px" :value="detail.sentiment_manual || ''" :disabled="saving" @change="setSentiment($event.target.value)">
+                <option value="">跟随 AI（{{ sentLabel(detail.sentiment_ai) }}）</option>
+                <option value="positive">正面</option>
+                <option value="negative">负面</option>
+                <option value="neutral">中性</option>
+              </select>
+            </div>
             <div><div class="muted" style="font-size:11px">点赞</div><b>{{ detail.like_count }}</b></div>
             <div><div class="muted" style="font-size:11px">回复</div><b>{{ detail.reply_count }}</b></div>
-            <div><div class="muted" style="font-size:11px">社区</div><b>{{ detail.community_name || '—' }}</b></div>
           </div>
 
           <div v-if="detail.sentiment_reason" style="margin-bottom:14px">
-            <div class="muted" style="font-size:11px;margin-bottom:4px">AI 情绪分析理由</div>
+            <div class="muted" style="font-size:11px;margin-bottom:4px">AI 情绪分析理由<span v-if="detail.sentiment_manual" style="color:var(--warn)">（已被人工修正）</span></div>
             <div style="font-size:13px;line-height:1.6;padding:8px 10px;background:#F8FAFC;border-radius:4px">{{ detail.sentiment_reason }}</div>
           </div>
 
@@ -159,7 +172,7 @@
 </template>
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { getContentLibrary, listPlatforms, listCommunities } from '../api.js'
+import { getContentLibrary, listPlatforms, listCommunities, overrideSentiment } from '../api.js'
 
 const items = ref([])
 const total = ref(0)
@@ -188,6 +201,24 @@ const sortedItems = computed(() => {
 })
 
 function openDetail(p){ detail.value = p }
+const saving = ref(false)
+async function setSentiment(v){
+  if (!detail.value) return
+  saving.value = true
+  try {
+    const r = await overrideSentiment(detail.value.id, v)
+    detail.value.sentiment_manual = r.sentiment_manual
+    detail.value.sentiment = r.sentiment
+    detail.value.sentiment_ai = r.sentiment_ai
+    // 同步列表行
+    const row = items.value.find(x => x.id === detail.value.id)
+    if (row) { row.sentiment = r.sentiment; row.sentiment_manual = r.sentiment_manual; row.sentiment_ai = r.sentiment_ai }
+  } catch (e) {
+    alert('保存失败：' + (e.response?.data?.detail || e.message))
+  } finally {
+    saving.value = false
+  }
+}
 
 async function load(){
   // 过滤空字符串参数，避免 community_id='' 触发后端 422
