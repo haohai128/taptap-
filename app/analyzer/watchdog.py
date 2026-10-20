@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from sqlmodel import Session, select
+from sqlalchemy import and_, or_
 
 from app.core.models import Alert, AlertLevel, AlertStatus, Briefing, Keyword, KeywordCategory, Post, AnalysisResult, Community
 from app.core.tz import now_cn, iso_cn
@@ -124,7 +125,10 @@ def generate_alerts_for_negative(session: Session) -> int:
         stmt = select(Post, AnalysisResult).where(
             Post.id == AnalysisResult.post_id,
             Post.content.contains(kw.word),
-            AnalysisResult.sentiment == "negative",
+            or_(
+                AnalysisResult.sentiment == "negative",
+                AnalysisResult.sentiment_manual == "negative",
+            ),
         )
         rows = session.exec(stmt).all()
         for post, _ in rows:
@@ -203,7 +207,16 @@ def content_library(
     if platform:
         stmt = stmt.where(Post.platform == platform)
     if sentiment:
-        stmt = stmt.where(AnalysisResult.sentiment == sentiment)
+        # 有效情绪 = 人工修正优先；无人工修正时用 AI 判定
+        stmt = stmt.where(
+            or_(
+                AnalysisResult.sentiment_manual == sentiment,
+                and_(
+                    AnalysisResult.sentiment_manual.is_(None),
+                    AnalysisResult.sentiment == sentiment,
+                ),
+            )
+        )
     if since:
         stmt = stmt.where(Post.published_at >= since)
     if until:

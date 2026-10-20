@@ -9,6 +9,11 @@ from sqlmodel import Session, select
 from app.core.models import AnalysisResult, Post
 
 
+def effective_sentiment(r: AnalysisResult) -> str:
+    """有效情绪：人工修正优先于 AI 判定。"""
+    return r.sentiment_manual or r.sentiment
+
+
 def _load_results_for_posts(session: Session, post_ids: list[int]) -> dict[int, AnalysisResult]:
     if not post_ids:
         return {}
@@ -67,7 +72,7 @@ def sentiment_trend(
         if r is None:
             continue
         day = (p.published_at or p.fetched_at).strftime("%Y-%m-%d")
-        buckets[day][r.sentiment] += 1
+        buckets[day][effective_sentiment(r)] += 1
 
     days = sorted(buckets.keys())
     series = {"positive": [], "negative": [], "neutral": [], "unknown": []}
@@ -213,7 +218,7 @@ def sentiment_proportion(
         r = results.get(p.id)
         if r is None:
             continue
-        counter[r.sentiment] += 1
+        counter[effective_sentiment(r)] += 1
     total = sum(counter.values()) or 1
     return [
         {"sentiment": s, "count": counter.get(s, 0), "ratio": round(counter.get(s, 0) / total, 4)}
@@ -285,7 +290,7 @@ def platform_overview(
         for p in posts:
             r = results.get(p.id)
             if r:
-                sent_counter[r.sentiment] += 1
+                sent_counter[effective_sentiment(r)] += 1
         out.append({
             "platform": pf,
             "post_count": len(posts),
@@ -320,7 +325,7 @@ def dashboard_summary(session: Session, days: int = 7) -> dict:
         total_replies += p.reply_count or 0
         r = results.get(p.id)
         if r:
-            sent_counter[r.sentiment] += 1
+            sent_counter[effective_sentiment(r)] += 1
 
     total = len(posts)
     analyzed = sum(sent_counter.values())
@@ -336,7 +341,7 @@ def dashboard_summary(session: Session, days: int = 7) -> dict:
             pub = pub.replace(tzinfo=None)
         try:
             if pub >= since.replace(tzinfo=None):
-                buckets[pub.strftime("%Y-%m-%d")][r.sentiment] += 1
+                buckets[pub.strftime("%Y-%m-%d")][effective_sentiment(r)] += 1
         except TypeError:
             pass
     trend_days = sorted(buckets.keys())
