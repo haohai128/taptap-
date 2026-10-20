@@ -54,12 +54,20 @@
       </div>
 
       <div class="card">
-        <div class="card-head"><h3 class="card-title">近 7 天情绪趋势</h3></div>
+        <div class="card-head">
+          <h3 class="card-title">近 7 天情绪趋势</h3>
+          <div class="trend-legend">
+            <span><i class="tl-dot pos"></i>正面</span>
+            <span><i class="tl-dot neu"></i>中性</span>
+            <span><i class="tl-dot neg"></i>负面</span>
+          </div>
+        </div>
         <div class="card-body trend-body">
           <div v-if="trendDays.length" class="trend-chart">
             <div class="trend-cols">
-              <div v-for="d in trendDays" :key="d" class="trend-col" :title="`${d}: 正${trendCount('positive',d)} 中${trendCount('neutral',d)} 负${trendCount('negative',d)}`">
-                <div class="trend-stack">
+              <div v-for="d in trendDays" :key="d" class="trend-col">
+                <div class="trend-count" :title="`共 ${trendTotal(d)} 帖`">{{ trendTotal(d) }}</div>
+                <div class="trend-stack" :title="`${d}: 正${trendCount('positive',d)} 中${trendCount('neutral',d)} 负${trendCount('negative',d)}`">
                   <div class="tseg pos" :style="{height: trendPct('positive',d) + '%'}"></div>
                   <div class="tseg neu" :style="{height: trendPct('neutral',d) + '%'}"></div>
                   <div class="tseg neg" :style="{height: trendPct('negative',d) + '%'}"></div>
@@ -167,6 +175,9 @@ function trendPct(s, day){
   if (!total) return 0
   return Math.round(trendCount(s,day)/total*100)
 }
+function trendTotal(day){
+  return ['positive','negative','neutral'].reduce((a,k)=>a+trendCount(k,day),0)
+}
 
 const recentNegative = computed(() => negative.value.slice(0,6))
 
@@ -203,14 +214,23 @@ onMounted(load)
 .sent-legend { display: flex; flex-direction: column; gap: 5px; margin-top: 12px; font-size: 12px; color: var(--text-muted); }
 
 /* 趋势图 */
+.trend-legend { display: flex; gap: 10px; font-size: 11px; color: var(--text-muted); align-items: center; }
+.tl-dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+.tl-dot.pos { background: #4ADE80; }
+.tl-dot.neu { background: #CBD5E1; }
+.tl-dot.neg { background: #F87171; }
 .trend-body { padding: 10px 12px; }
-.trend-chart { height: 180px; display: flex; align-items: flex-end; }
-.trend-cols { display: flex; gap: 8px; flex: 1; align-items: stretch; height: 100%; }
-.trend-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
-.trend-stack { display: flex; flex-direction: column; border-radius: 4px 4px 0 0; overflow: hidden; min-height: 2px; }
+.trend-chart { height: 200px; display: flex; align-items: flex-end; }
+.trend-cols { display: flex; gap: 10px; flex: 1; align-items: stretch; height: 100%; }
+.trend-col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; height: 100%; }
+.trend-count { text-align: center; font-size: 10px; color: var(--text-light); font-variant-numeric: tabular-nums; margin-bottom: 3px; }
+.trend-stack { display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; min-height: 3px; flex: 1; }
+.trend-stack:has(.tseg[style*="height: 0%"]) { min-height: 0; }
+.tseg { width: 100%; }
 .tseg.pos { background: #4ADE80; }
 .tseg.neu { background: #CBD5E1; }
 .tseg.neg { background: #F87171; }
+.tseg + .tseg { border-top: 1px solid rgba(255,255,255,.55); }
 .trend-day { text-align: center; font-size: 10px; color: var(--text-light); margin-top: 5px; white-space: nowrap; }
 
 /* 热点话题 */
